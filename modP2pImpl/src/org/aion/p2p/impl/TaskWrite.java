@@ -25,9 +25,12 @@
 
 package org.aion.p2p.impl;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl.one.msg.DisconnectMsg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -47,6 +50,8 @@ public class TaskWrite implements Runnable {
     private Msg msg;
     private ChannelBuffer channelBuffer;
     private P2pMgr p2pMgr;
+
+    private static final Logger log = LoggerFactory.getLogger(TaskWrite.class);
 
     TaskWrite(
             ExecutorService _workers,
@@ -101,6 +106,9 @@ public class TaskWrite implements Runnable {
             buf.flip();
 
             try {
+
+                log.info("WRITE: " + ByteUtil.toHexString(buf.array()) + " " + sc);
+
                 while (buf.hasRemaining()) {
                     sc.write(buf);
                 }

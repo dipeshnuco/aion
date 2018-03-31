@@ -44,9 +44,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.*;
 // import org.aion.p2p.impl.one.msg.Hello;
 import org.aion.p2p.impl.zero.msg.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Chris p2p://{uuid}@{ip}:{port}
@@ -100,6 +103,8 @@ public final class  P2pMgr implements IP2pMgr {
     private static ResHandshake1 cachedResHandshake1;
     private static ResHandshake cachedResHandshake;
 
+    Logger log = LoggerFactory.getLogger(P2pMgr.class);
+
     private final class TaskInbound implements Runnable {
         @Override
         public void run() {
@@ -135,6 +140,7 @@ public final class  P2pMgr implements IP2pMgr {
                         try {
                             read(sk);
                         } catch (IOException | NullPointerException e) {
+                            e.printStackTrace();
                             if (showLog) {
                                 System.out.println("<p2p read-msg-io-exception>");
                             }
@@ -426,6 +432,7 @@ public final class  P2pMgr implements IP2pMgr {
             node.setChannel(channel);
             nodeMgr.inboundNodeAdd(node);
         } catch (IOException e) {
+            e.printStackTrace();
             if (showLog)
                 System.out.println("<p2p inbound-accept-io-exception>");
             return;
@@ -444,6 +451,8 @@ public final class  P2pMgr implements IP2pMgr {
         int ret;
         while ((ret = _sc.read(_cb.headerBuf)) > 0) {
         }
+
+        log.info("READ: " + ByteUtil.toHexString(_cb.headerBuf.array()) + " " + _sc);
 
         if (!_cb.headerBuf.hasRemaining()) {
             _cb.header = Header.decode(_cb.headerBuf.array());
@@ -769,6 +778,7 @@ public final class  P2pMgr implements IP2pMgr {
             workers.submit(new TaskConnectPeers());
 
         } catch (IOException e) {
+            e.printStackTrace();
             if (showLog)
                 System.out.println("<p2p tcp-server-io-exception>");
         }
