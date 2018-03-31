@@ -380,9 +380,11 @@ public final class  P2pMgr implements IP2pMgr {
     void closeSocket(final SocketChannel _sc) {
         try {
             SelectionKey sk = _sc.keyFor(selector);
-            _sc.close();
+
             if (sk != null)
                 sk.cancel();
+
+            _sc.close();
         } catch (IOException e) {
             if (showLog)
                 System.out.println("<p2p close-socket-io-exception>");
@@ -531,15 +533,12 @@ public final class  P2pMgr implements IP2pMgr {
                 }
                 break;
 
-            // testing versioning
-//            case Ver.V1:
-//                if(ctrl == 0 && act == 0){
-//                    Hello hello = Hello.decode(bodyBytes);
-//                    if(hello != null)
-//                        System.out.println("v1 hello msg " + hello.getMsg());
-//                }
-//
-//                break;
+            case Ver.V1:
+                switch (ctrl) {
+                    case Ctrl.NET:
+                        break;
+                }
+                break;
         }
 
     }

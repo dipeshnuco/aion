@@ -35,15 +35,15 @@ import java.util.Set;
  */
 public final class Act {
 
-    static final byte DISCONNECT = 0;
+    public static final byte DISCONNECT = 0;
 
     public static final byte REQ_HANDSHAKE = 1;
 
     public  static final byte RES_HANDSHAKE = 2;
 
-    static final byte PING = 3;
+    public static final byte PING = 3;
 
-    static final byte PONG = 4;
+    public static final byte PONG = 4;
 
     public static final byte REQ_ACTIVE_NODES = 5;
 
@@ -56,6 +56,11 @@ public final class Act {
         add(RES_HANDSHAKE);
         add(REQ_ACTIVE_NODES);
         add(RES_ACTIVE_NODES);
+
+        // version 1
+        add(PING);
+        add(PONG);
+        add(DISCONNECT);
     }};
 
     /**

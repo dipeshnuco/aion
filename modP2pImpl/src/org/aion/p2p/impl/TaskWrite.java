@@ -27,6 +27,7 @@ package org.aion.p2p.impl;
 
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
+import org.aion.p2p.impl.one.msg.DisconnectMsg;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -103,6 +104,10 @@ public class TaskWrite implements Runnable {
                 while (buf.hasRemaining()) {
                     sc.write(buf);
                 }
+
+                if (msg instanceof DisconnectMsg)
+                    this.p2pMgr.closeSocket(sc);
+
             } catch (ClosedChannelException ex1) {
                 if (showLog) {
                     System.out.println("<p2p closed-channel-exception node=" + this.nodeShortId + ">");
