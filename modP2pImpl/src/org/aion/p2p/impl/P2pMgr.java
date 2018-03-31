@@ -140,7 +140,7 @@ public final class  P2pMgr implements IP2pMgr {
                         try {
                             read(sk);
                         } catch (IOException | NullPointerException e) {
-                            e.printStackTrace();
+                            log.error("error during read", e);
                             if (showLog) {
                                 System.out.println("<p2p read-msg-io-exception>");
                             }
@@ -374,10 +374,10 @@ public final class  P2pMgr implements IP2pMgr {
      */
     private void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
-        _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
-        _channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-        _channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-        _channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        _channel.socket().setSoTimeout(0);
+        //_channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        //_channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        //_channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
     }
 
     /**
@@ -385,6 +385,15 @@ public final class  P2pMgr implements IP2pMgr {
      */
     void closeSocket(final SocketChannel _sc) {
         try {
+            log.debug("CLOSING SOCKET!!!! " + _sc);
+            StackTraceElement[] element = Thread.currentThread().getStackTrace();
+
+            String outStr = "";
+            for (StackTraceElement e : element) {
+                outStr += e.toString() + "\n";
+            }
+            log.debug(outStr);
+
             SelectionKey sk = _sc.keyFor(selector);
 
             if (sk != null)
@@ -452,7 +461,7 @@ public final class  P2pMgr implements IP2pMgr {
         while ((ret = _sc.read(_cb.headerBuf)) > 0) {
         }
 
-        log.info("READ: " + ByteUtil.toHexString(_cb.headerBuf.array()) + " " + _sc);
+        log.info("READ: " + ByteUtil.toHexString(_cb.headerBuf.array()) + " RET: " + ret + _sc);
 
         if (!_cb.headerBuf.hasRemaining()) {
             _cb.header = Header.decode(_cb.headerBuf.array());
@@ -475,6 +484,8 @@ public final class  P2pMgr implements IP2pMgr {
         int ret;
         while ((ret = _sc.read(_cb.bodyBuf)) > 0) {
         }
+
+        log.info("READ BODY: " + ByteUtil.toHexString(_cb.bodyBuf.array()) + " RET: " + ret + _sc);
 
         if (!_cb.bodyBuf.hasRemaining()) {
             _cb.body = _cb.bodyBuf.array();
@@ -501,7 +512,7 @@ public final class  P2pMgr implements IP2pMgr {
             readHeader((SocketChannel) _sk.channel(), rb);
         }
 
-//        if(rb.isHeaderCompleted() && !handlers.containsKey(rb.header.getRoute())){
+//        if(rb.isHeaderCompleted() && !handlers.containsKefy(rb.header.getRoute())){
 //            // TODO: Test
 //            return;
 //        }
@@ -545,6 +556,7 @@ public final class  P2pMgr implements IP2pMgr {
             case Ver.V1:
                 switch (ctrl) {
                     case Ctrl.NET:
+                        log.debug("hit wrong place!");
                         break;
                 }
                 break;
@@ -725,7 +737,7 @@ public final class  P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16), new ThreadFactory() {
+            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 4), new ThreadFactory() {
 
                 private AtomicInteger cnt = new AtomicInteger();
 
@@ -774,7 +786,7 @@ public final class  P2pMgr implements IP2pMgr {
             // rem out for bug: https://github.com/aionnetwork/aion/issues/136
             //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
 
-            workers.submit(new TaskClear());
+            //workers.submit(new TaskClear());
             workers.submit(new TaskConnectPeers());
 
         } catch (IOException e) {

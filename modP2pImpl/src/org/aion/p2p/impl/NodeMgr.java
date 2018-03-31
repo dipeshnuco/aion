@@ -36,6 +36,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.xml.stream.*;
 
 public class NodeMgr implements INodeMgr {
@@ -51,6 +54,8 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> activeNodes = new ConcurrentHashMap<>();
+
+    private static final Logger log = LoggerFactory.getLogger(NodeMgr.class);
 
     Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
@@ -190,6 +195,7 @@ public class NodeMgr implements INodeMgr {
     }
 
     void inboundNodeAdd(final Node _n) {
+        log.debug("Adding new INBOUND: " + _n.getIdHash() + " " + _n.getChannel());
         updateMetric(_n);
         inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
@@ -312,9 +318,11 @@ public class NodeMgr implements INodeMgr {
             node.setConnection("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
-            if (previous != null)
+            if (previous != null) {
+                log.debug("FOUND PREVIOUS ACTIVE: " + ((Node) previous).getChannel() + "ID: " + previous.getIdHash() + " CHANNEL HASH: " + ((Node) previous).getChannel().hashCode());
                 _p2pMgr.closeSocket(node.getChannel());
-            else {
+            } else {
+                log.debug("FOUND NEW ACTIVE: " + node.getChannel() + " ID: " + node.getIdHash());
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }

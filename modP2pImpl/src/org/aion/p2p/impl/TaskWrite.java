@@ -81,6 +81,9 @@ public class TaskWrite implements Runnable {
 
     @Override
     public void run() {
+
+        log.info("TaskWrite was called!! " + sc + " sending message type: " + msg.getClass().getSimpleName());
+
         // reset allocated buffer and clear messages if the channel is closed
         if (channelBuffer.isClosed.get()) {
             clearChannelBuffer();
@@ -107,14 +110,16 @@ public class TaskWrite implements Runnable {
 
             try {
 
-                log.info("WRITE: " + ByteUtil.toHexString(buf.array()) + " " + sc);
+                log.info("WRITE: " + ByteUtil.toHexString(buf.array()) + " " + sc + " type: " + msg.getClass().getSimpleName());
 
                 while (buf.hasRemaining()) {
                     sc.write(buf);
                 }
 
-                if (msg instanceof DisconnectMsg)
-                    this.p2pMgr.closeSocket(sc);
+                log.info("WRITE COMPLETED: " + sc + " " + msg.getClass().getSimpleName());
+
+//                if (msg instanceof DisconnectMsg)
+//                    this.p2pMgr.closeSocket(sc);
 
             } catch (ClosedChannelException ex1) {
                 if (showLog) {
@@ -139,8 +144,10 @@ public class TaskWrite implements Runnable {
                 }
             }
         } else {
+            log.info("could not send message, queueing " + sc);
             // message may get dropped here when the message queue is full.
-            channelBuffer.messages.offer(msg);
+            boolean offered = channelBuffer.messages.offer(msg);
+            log.info("offer called, response: " + offered);
         }
     }
 }
