@@ -98,10 +98,10 @@ public final class  P2pMgr implements IP2pMgr {
     private AtomicBoolean start = new AtomicBoolean(true);
 
     // initialed after handlers registration completed
-    private static ReqHandshake1 cachedReqHandshake1;
-    private static ReqHandshake cachedReqHandshake;
-    private static ResHandshake1 cachedResHandshake1;
-    private static ResHandshake cachedResHandshake;
+    private ReqHandshake1 cachedReqHandshake1;
+    private ReqHandshake cachedReqHandshake;
+    private ResHandshake1 cachedResHandshake1;
+    private ResHandshake cachedResHandshake;
 
     Logger log = LoggerFactory.getLogger(P2pMgr.class);
 

@@ -32,7 +32,7 @@ public class LastThousands {
         String nodeId = UUID.randomUUID().toString();
         String ip = "127.0.0.1";
         int port = 30303;
-        int max = 2;
+        int max = 1000;
         int maxPort = port + max;
         String[] testerP2p = new String[] { "p2p://" + nodeId + "@" + ip + ":" + port };
         P2pMgr tester = new P2pMgr(0, "", nodeId, ip, port,  new String[]{}, false, max, max, false, false, true, false, "");
@@ -43,6 +43,7 @@ public class LastThousands {
             if(checkPort(ip, i)){
                 System.out.println("examiner " + i);
                 P2pMgr examiner = new P2pMgr(0, "", UUID.randomUUID().toString(), ip, i,  testerP2p, false, max, max, false, true, true, false, "");
+
                 examiners.add(examiner);
             }
         }
