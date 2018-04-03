@@ -69,7 +69,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final Map<Integer, Long> lastRequestTime = Collections.synchronizedMap(new LRUMap<>(1024));
+    private final static Map<Integer, Long> lastRequestTime = Collections.synchronizedMap(new LRUMap<>(1024));
     private final static long MIN_INTERNAL = 500; // 0.5 second
 
     public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {

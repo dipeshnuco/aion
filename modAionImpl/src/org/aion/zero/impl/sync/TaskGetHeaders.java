@@ -54,7 +54,7 @@ final class TaskGetHeaders implements Runnable {
 
     private final Logger log;
 
-    private final Map<Integer, Long> lastRequestTime = Collections.synchronizedMap(new LRUMap<>(1024));
+    private final static Map<Integer, Long> lastRequestTime = Collections.synchronizedMap(new LRUMap<>(1024));
     private final static long MIN_INTERNAL = 1000; // 1 second
 
     TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log){
