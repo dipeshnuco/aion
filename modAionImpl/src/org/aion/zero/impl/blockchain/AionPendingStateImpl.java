@@ -59,6 +59,8 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AionPendingStateImpl
         implements IPendingStateInternal<org.aion.zero.impl.types.AionBlock, AionTransaction> {
@@ -253,6 +255,7 @@ public class AionPendingStateImpl
     public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
         int unknownTx = 0;
         List<AionTransaction> newPending = new ArrayList<>();
+        List<AionTransaction> newLargeNonce = new ArrayList<>();
 
         //Map<Address, BigInteger> dbNonce = new HashMap<>();
         for (AionTransaction tx : transactions) {
@@ -262,12 +265,11 @@ public class AionPendingStateImpl
             if (txNonce.compareTo(bestNonce) > 0) {
 
                 if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
-                    AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
+                    newLargeNonce.add(tx);
+                } else {
+                    addToTxCache(tx);
+                    LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
                 }
-
-                addToTxCache(tx);
-
-                LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
             } else if (txNonce.equals(bestNonce)) {
                 if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
                     addToTxCache(tx);
@@ -321,7 +323,9 @@ public class AionPendingStateImpl
         }
 
         // Broadcast new pending transactions
-        AionImpl.inst().broadcastTransactions(newPending);
+        if (!newPending.isEmpty() || !newLargeNonce.isEmpty()) {
+            AionImpl.inst().broadcastTransactions(Stream.concat(newPending.stream(), newLargeNonce.stream()).collect(Collectors.toList()));
+        }
 
         return newPending;
     }
