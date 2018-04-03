@@ -35,7 +35,10 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
 import org.aion.mcf.types.BlockIdentifier;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
@@ -47,6 +50,7 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
 //import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 /**
@@ -65,7 +69,8 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    //private final Map<Long, A0BlockHeader> cache = Collections.synchronizedMap(new LRUMap<>(1024));
+    private final Map<Integer, Long> lastRequestTime = Collections.synchronizedMap(new LRUMap<>(1024));
+    private final static long MIN_INTERNAL = 500; // 0.5 second
 
     public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
@@ -77,6 +82,14 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        long now = System.currentTimeMillis();
+        Long lastRequest = lastRequestTime.get(_nodeIdHashcode);
+        if (lastRequest != null && now - lastRequest < MIN_INTERNAL) {
+            return;
+        } else {
+            lastRequestTime.put(_nodeIdHashcode, now);
+        }
+
         ReqBlocksHeaders reqHeaders = ReqBlocksHeaders.decode(_msgBytes);
         if (reqHeaders != null) {
             long fromBlock = reqHeaders.getFromBlock();

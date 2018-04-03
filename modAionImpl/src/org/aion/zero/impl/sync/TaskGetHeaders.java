@@ -32,6 +32,7 @@ package org.aion.zero.impl.sync;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
@@ -53,6 +54,9 @@ final class TaskGetHeaders implements Runnable {
 
     private final Logger log;
 
+    private final Map<Integer, Long> lastRequestTime = Collections.synchronizedMap(new LRUMap<>(1024));
+    private final static long MIN_INTERNAL = 1000; // 1 second
+
     TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log){
         this.p2p = _p2p;
         this.fromBlock = _fromBlock;
@@ -63,7 +67,6 @@ final class TaskGetHeaders implements Runnable {
 
     @Override
     public void run() {
-        Set<Integer> ids = new HashSet<>();
         Collection<INode> preFilter = this.p2p.getActiveNodes().values();
 
         List<INode> filtered = preFilter.stream().filter(
@@ -71,18 +74,21 @@ final class TaskGetHeaders implements Runnable {
                         n.getTotalDifficulty().compareTo(this.selfTd) >= 0
         ).collect(Collectors.toList());
 
+        long now = System.currentTimeMillis();
         if (filtered.size() > 0) {
             Random r = new Random(System.currentTimeMillis());
             for (int i = 0; i < 2; i++) {
                 INode node = filtered.get(r.nextInt(filtered.size()));
-                if (!ids.contains(node.getIdHash())) {
-                    ids.add(node.getIdHash());
-                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
+
+                Long lastRequest = lastRequestTime.get(node.getIdHash());
+                if (lastRequest == null || now - lastRequest > MIN_INTERNAL) {
+                    lastRequestTime.put(node.getIdHash(), now);
 
                     if (log.isDebugEnabled()) {
                         log.debug("<get-headers from-num={} size={} node={}>", fromBlock, syncMax, node.getIdShort());
                     }
 
+                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
                     this.p2p.send(node.getIdHash(), rbh);
                 }
             }
