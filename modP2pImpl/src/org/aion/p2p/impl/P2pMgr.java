@@ -730,24 +730,17 @@ public final class P2pMgr implements IP2pMgr {
         }
 
         private void write(SelectableChannel channel, SelectionKey key) throws IOException {
-            SocketChannel chan = (SocketChannel) channel;
-            try {
-                LOOP:
-                while (!byteBuffers.isEmpty()) {
-                    ByteBuffer buf = byteBuffers.peek();
-                    // try to write as much as we can
-                    int ret;
-                    while (buf != null && buf.hasRemaining()) {
-                        ret = chan.write(buf);
-                        if (ret <= 0) {
-                            break LOOP;
-                        }
-                    }
+            if (byteBuffers.isEmpty()) {
+                return;
+            }
 
-                    // if we finish processing simply remove
-                    if (!buf.hasRemaining()) {
-                        byteBuffers.remove(buf);
-                    }
+            try {
+                SocketChannel chan = (SocketChannel) channel;
+                ByteBuffer buf = byteBuffers.peek();
+                chan.write(buf);
+
+                if (!buf.hasRemaining()) {
+                    byteBuffers.remove(buf);
                 }
             } finally {
                 if (byteBuffers.isEmpty() && key.interestOps() != SelectionKey.OP_READ) {
