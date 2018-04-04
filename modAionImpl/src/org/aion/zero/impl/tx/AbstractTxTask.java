@@ -64,6 +64,9 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
     public List<TX> call() throws Exception {
 
         try {
+            if(this.tx.isEmpty())
+                return null;
+
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
             if (activeNodes != null && !activeNodes.isEmpty()) {
                 for (Map.Entry<Integer, INode> e : activeNodes.entrySet()) {
