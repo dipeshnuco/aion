@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class TaskGetStatus implements Runnable {
 
 
-    private final static int intervalTotal = 4000;
+    private final static int intervalTotal = 2000;
 
     private final static int intervalMin = 200;
 
