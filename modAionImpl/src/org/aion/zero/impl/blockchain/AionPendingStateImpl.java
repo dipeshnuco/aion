@@ -263,16 +263,18 @@ public class AionPendingStateImpl
             BigInteger bestNonce = bestNonce(tx.getFrom());
 
             if (txNonce.compareTo(bestNonce) > 0) {
-
                 if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                     newLargeNonce.add(tx);
-                } else {
                     addToTxCache(tx);
                     LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
                 }
             } else if (txNonce.equals(bestNonce)) {
                 if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
-                    addToTxCache(tx);
+                    if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
+                        newLargeNonce.add(tx);
+                        addToTxCache(tx);
+                        LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                    }
                     continue;
                 }
 
