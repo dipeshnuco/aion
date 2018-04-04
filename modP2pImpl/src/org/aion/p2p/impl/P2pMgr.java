@@ -700,6 +700,7 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void channelReady(SelectableChannel channel, SelectionKey key) {
             try {
+                // System.out.println(key + ", " + key.interestOps() + ", " + key.isAcceptable() + ", " + key.isReadable() + ", " + key.isWritable());
 
                 if (key.isAcceptable())
                     throw new UnsupportedOperationException("HandleChannel does not support acceptable keys");
@@ -749,15 +750,20 @@ public final class P2pMgr implements IP2pMgr {
                     }
                 }
             } finally {
-                if (byteBuffers.isEmpty())
+                if (byteBuffers.isEmpty() && key.interestOps() != SelectionKey.OP_READ) {
                     key.interestOps(SelectionKey.OP_READ);
+                    // System.out.println(key + ", OP_READ");
+                }
             }
         }
 
         @Override
         public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
             if (byteBuffers.offer(buffer)) {
-                key.interestOps(SelectionKey.OP_WRITE);
+                if ((key.interestOps() & SelectionKey.OP_WRITE) == 0) {
+                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                    // System.out.println(key + ", OP_READ_WRITE");
+                }
             } else {
                 if (P2pMgr.this.showLog) {
                     long now = System.currentTimeMillis();
