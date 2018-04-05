@@ -36,7 +36,7 @@ import java.util.List;
  * @author chris
  * used by imported headers on sync mgr
  */
-final class BlocksWrapper {
+public final class BlocksWrapper {
 
     private int nodeIdHash;
 
@@ -50,7 +50,7 @@ final class BlocksWrapper {
      * @param _displayId String
      * @param _blocks List
      */
-    BlocksWrapper(int _nodeIdHash, String _displayId, final List<AionBlock> _blocks){
+    public BlocksWrapper(int _nodeIdHash, String _displayId, final List<AionBlock> _blocks){
         this.nodeIdHash = _nodeIdHash;
         this.displayId = _displayId;
         this.blocks = _blocks;

@@ -167,6 +167,7 @@ public class AionHub {
         this.propHandler = new BlockPropagationHandler(1024,
                 this.blockchain,
                 this.p2pMgr,
+                this.syncMgr,
                 chainConfig.createBlockHeaderValidator());
 
         registerCallback();

@@ -328,7 +328,11 @@ public final class SyncMgr {
         // add batch
         importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
     }
-    
+
+    public BlockingQueue<BlocksWrapper> getImportedBlocks() {
+        return importedBlocks;
+    }
+
     public long getNetworkBestBlockNumber() {
         synchronized (this.networkStatus){
             return this.networkStatus.getTargetBestBlockNumber();

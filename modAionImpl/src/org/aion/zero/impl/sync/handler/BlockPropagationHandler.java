@@ -42,12 +42,18 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.sync.BlocksWrapper;
+import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -90,11 +96,14 @@ public class BlockPropagationHandler {
 
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
 
+    private final BlockingQueue<BlocksWrapper> importedBlocks;
+
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     public BlockPropagationHandler(final int cacheSize,
                                    final IAionBlockchain blockchain,
                                    final IP2pMgr p2pManager,
+                                   final SyncMgr syncmgr,
                                    BlockHeaderValidator<A0BlockHeader> headerValidator) {
         this.cacheSize = cacheSize;
 
@@ -108,6 +117,8 @@ public class BlockPropagationHandler {
         this.p2pManager = p2pManager;
 
         this.blockHeaderValidator = headerValidator;
+
+        this.importedBlocks = syncmgr.getImportedBlocks();
     }
 
     // assumption here is that blocks propagated have unique hashes
@@ -161,30 +172,9 @@ public class BlockPropagationHandler {
         // send
         boolean sent = send(block, nodeId);
 
-        // process
-        long t1 = System.currentTimeMillis();
-        ImportResult result ;
-
-        if (this.blockchain.skipTryToConnect(block.getNumber())) {
-            result = ImportResult.NO_PARENT;
-            log.info("<import-status: node = {}, number = {}, txs = {}, result = NOT_CHECKED>", _displayId,
-                    block.getNumber(), block.getTransactionsList().size(), result);
-        } else {
-            result = this.blockchain.tryToConnect(block);
-            long t2 = System.currentTimeMillis();
-            log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>", _displayId,
-                    block.getNumber(), block.getTransactionsList().size(), result, t2 - t1);
-        }
-
-        // process resulting state
-        if (sent && result.isSuccessful())
-            return PropStatus.PROP_CONNECTED;
-
-        if (result.isSuccessful())
-            return PropStatus.CONNECTED;
-
-        if (sent)
-            return PropStatus.PROPAGATED;
+        // delegate the block import to syncing
+        BlocksWrapper wraper = new BlocksWrapper(nodeId, _displayId, Collections.singletonList(block));
+        importedBlocks.offer(wraper);
 
         // should never reach here, but just in case
         return PropStatus.DROPPED;
