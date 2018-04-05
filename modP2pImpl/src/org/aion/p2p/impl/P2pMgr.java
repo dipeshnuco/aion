@@ -743,9 +743,12 @@ public final class P2pMgr implements IP2pMgr {
                     byteBuffers.remove(buf);
                 }
             } finally {
-                if (byteBuffers.isEmpty() && key.interestOps() != SelectionKey.OP_READ) {
-                    key.interestOps(SelectionKey.OP_READ);
-                    // System.out.println(key + ", OP_READ");
+                if (byteBuffers.isEmpty()) {
+                    int ops = key.interestOps();
+                    if ((ops & SelectionKey.OP_WRITE) != 0) {
+                        key.interestOps(ops & (~SelectionKey.OP_WRITE));
+                        // System.out.println(key + ", OP_WRITE off");
+                    }
                 }
             }
         }
@@ -753,9 +756,10 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
             if (byteBuffers.offer(buffer)) {
-                if ((key.interestOps() & SelectionKey.OP_WRITE) == 0) {
-                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                    // System.out.println(key + ", OP_READ_WRITE");
+                int ops = key.interestOps();
+                if ((ops & SelectionKey.OP_WRITE) == 0) {
+                    key.interestOps(ops | SelectionKey.OP_WRITE);
+                    // System.out.println(key + ", OP_WRITE on");
                 }
             } else {
                 if (P2pMgr.this.showLog) {
