@@ -379,11 +379,11 @@ public final class P2pMgr implements IP2pMgr {
                         binaryVersion = "decode-fail";
                     }
                     node.setBinaryVersion(binaryVersion);
-                    workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake1));
+                    workers.execute(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake1));
                 }
                 // handshake 0
                 else {
-                    workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake));
+                    workers.execute(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake));
                 }
                 nodeMgr.moveInboundToActive(_channelHash, this);
             }
@@ -444,7 +444,7 @@ public final class P2pMgr implements IP2pMgr {
                 if (rb.nodeIdHash != 0) {
                     Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null)
-                        workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(),
+                        workers.execute(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(),
                                 new ResActiveNodes(nodeMgr.getActiveNodesList())));
                 }
                 break;
@@ -492,7 +492,7 @@ public final class P2pMgr implements IP2pMgr {
                 if (hlr == null)
                     continue;
                 node.refreshTimestamp();
-                workers.submit(() -> hlr.receive(node.getIdHash(), node.getIdShort(), _msgBytes));
+                workers.execute(() -> hlr.receive(node.getIdHash(), node.getIdShort(), _msgBytes));
             }
         }
     }
@@ -553,8 +553,8 @@ public final class P2pMgr implements IP2pMgr {
             // rem out for bug: https://github.com/aionnetwork/aion/issues/136
             //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
 
-            workers.submit(new TaskClear());
-            workers.submit(new TaskConnectPeers());
+            workers.execute(new TaskClear());
+            workers.execute(new TaskConnectPeers());
 
         } catch (IOException e) {
             if (showLog)
@@ -619,7 +619,7 @@ public final class P2pMgr implements IP2pMgr {
         if (node != null) {
             SocketChannel channel = node.getChannel();
             if (channel.isOpen()) {
-                this.workers.submit(
+                this.workers.execute(
                         new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), _msg));
             }
         }
@@ -869,8 +869,8 @@ public final class P2pMgr implements IP2pMgr {
                             addOutboundNode(node);
 
                             // fire extended handshake request first
-                            workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), channel, cachedReqHandshake1));
-                            workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), channel, cachedReqHandshake));
+                            workers.execute(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), channel, cachedReqHandshake1));
+                            workers.execute(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), channel, cachedReqHandshake));
 
                             if (showLog)
                                 System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
