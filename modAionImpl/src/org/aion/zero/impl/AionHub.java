@@ -158,7 +158,8 @@ public class AionHub {
 
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr,
-                this.cfg.getSync().getBlocksBackwardMax(), this.cfg.getSync().getBlocksImportMax(),
+                this.cfg.getSync().getBlocksBackwardMin(), this.cfg.getSync().getBlocksBackwardMax(),
+                this.cfg.getSync().getBlocksRequestMax(), this.cfg.getSync().getBlocksResponseMax(),
                 this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus(),
                 this.cfg.getReports().isEnabled(), reportsFolder);
 
@@ -190,9 +191,9 @@ public class AionHub {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusHandler(syncLog, this.p2pMgr, this.syncMgr));
-        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksImportMax()));
+        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksResponseMax()));
         cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr));
-        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksImportMax()));
+        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksResponseMax()));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr));
         cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr));
         cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler));
